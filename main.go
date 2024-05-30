@@ -10,10 +10,6 @@ import (
 	"github.com/gorilla/mux"
 )
 
-func helloGoHandler(w http.ResponseWriter, r *http.Request) {
-	w.Write([]byte("Hello, Go!"))
-}
-
 func main() {
 	r := mux.NewRouter()
 	r.HandleFunc("/v1/{key}", dataPutHandler).Methods("PUT")
@@ -45,10 +41,10 @@ func dataGetHandler(w http.ResponseWriter, r *http.Request) {
 func Get(key string) (string, error) {
 	store.RLock()
 	value, ok := store.m[key]
-	store.RUnlock()
 	if !ok {
-		return "", ErrorNoSuchkey
+		return " ", ErrorNoSuchkey
 	}
+	store.RUnlock()
 	return value, nil
 }
 
@@ -71,7 +67,7 @@ func dataPutHandler(w http.ResponseWriter, r *http.Request) {
 }
 
 func Put(key string, value string) error {
-	if _, ok := store[key]; ok {
+	if _, ok := store.m[key]; ok {
 		return ErrorKeyExists
 	}
 	store.Lock()
