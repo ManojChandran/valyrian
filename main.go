@@ -1,31 +1,36 @@
 package main
 
 import (
-	"errors"
 	"io/ioutil"
 	"log"
 	"net/http"
-	"sync"
 
 	"github.com/gorilla/mux"
 )
 
+var transact TransactionLogger
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		log.Println(r.Method, r.RequestURI)
+		next.ServeHTTP(w, r)
+	})
+}
+
 func main() {
 	r := mux.NewRouter()
+
+	r.Use(loggingMiddleware)
+
 	r.HandleFunc("/v1/{key}", dataPutHandler).Methods("PUT")
 	r.HandleFunc("/v1/{key}", dataGetHandler).Methods("GET")
-	//	r.HandleFunc("/v1/{key}", dataDelHandler).Methods("GET")
+	r.HandleFunc("/v1/{key}", dataDelHandler).Methods("GET")
+
+	r.HandleFunc("/v1", notAllowedHandler)
+	r.HandleFunc("/v1/{key}", notAllowedHandler)
 
 	log.Fatal(http.ListenAndServe(":8080", r))
 }
-
-var store = struct {
-	sync.RWMutex
-	m map[string]string
-}{m: make(map[string]string)}
-
-var ErrorNoSuchkey = errors.New("no such key")
-var ErrorKeyExists = errors.New("key already exists")
 
 func dataPutHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -44,16 +49,6 @@ func dataPutHandler(w http.ResponseWriter, r *http.Request) {
 
 	w.WriteHeader(http.StatusCreated)
 }
-func Put(key string, value string) error {
-	if _, ok := store.m[key]; ok {
-		return ErrorKeyExists
-	}
-	store.Lock()
-	store.m[key] = value
-	store.Unlock()
-	return nil
-
-}
 
 func dataGetHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
@@ -66,31 +61,17 @@ func dataGetHandler(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(value))
 }
 
-func Get(key string) (string, error) {
-	store.RLock()
-	value, ok := store.m[key]
-	if !ok {
-		return " ", ErrorNoSuchkey
+func dataDelHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key := vars["key"]
+	err := Del(key)
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusNotFound)
+		return
 	}
-	store.RUnlock()
-	return value, nil
+	w.WriteHeader(http.StatusNoContent)
 }
 
-//func dataDelHandler(w http.ResponseWriter, r *http.Request) {
-//	vars := mux.Vars(r)
-//	key := vars["key"]
-//	err := Del(key)
-//	if err != nil {
-//		http.Error(w, err.Error(), http.StatusNotFound)
-//		return
-//	}
-//	w.WriteHeader(http.StatusNoContent)
-//}
-//
-//func Del(key string) error {
-//	if _, ok := store[key]; !ok {
-//		return ErrorNoSuchkey
-//	}
-//	delete(store, key)
-//	return nil
-//}
+func notAllowedHandler(w http.ResponseWriter, r *http.Request) {
+	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+}
