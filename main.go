@@ -27,6 +27,34 @@ var store = struct {
 var ErrorNoSuchkey = errors.New("no such key")
 var ErrorKeyExists = errors.New("key already exists")
 
+func dataPutHandler(w http.ResponseWriter, r *http.Request) {
+	vars := mux.Vars(r)
+	key := vars["key"]
+	value, err := ioutil.ReadAll(r.Body)
+	defer r.Body.Close()
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusBadRequest)
+		return
+	}
+	err = Put(key, string(value))
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusCreated)
+}
+func Put(key string, value string) error {
+	if _, ok := store.m[key]; ok {
+		return ErrorKeyExists
+	}
+	store.Lock()
+	store.m[key] = value
+	store.Unlock()
+	return nil
+
+}
+
 func dataGetHandler(w http.ResponseWriter, r *http.Request) {
 	vars := mux.Vars(r)
 	key := vars["key"]
@@ -46,36 +74,6 @@ func Get(key string) (string, error) {
 	}
 	store.RUnlock()
 	return value, nil
-}
-
-func dataPutHandler(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	key := vars["key"]
-	value, err := ioutil.ReadAll(r.Body)
-	defer r.Body.Close()
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusBadRequest)
-		return
-	}
-	err = Put(key, string(value))
-	if err != nil {
-		http.Error(w, err.Error(), http.StatusInternalServerError)
-		return
-	}
-
-	w.WriteHeader(http.StatusCreated)
-}
-
-func Put(key string, value string) error {
-	if _, ok := store.m[key]; ok {
-		return ErrorKeyExists
-	}
-	store.Lock()
-	store.m[key] = value
-	store.Unlock()
-
-	return nil
-
 }
 
 //func dataDelHandler(w http.ResponseWriter, r *http.Request) {
