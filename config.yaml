@@ -1,0 +1,8 @@
+app_name: "MyApp"
+port: 9090
+
+db_host: "db.example.com"
+db_port: 3306
+db_user: "admin"
+db_password: "supersecret"
+db_name: "prod_db"
