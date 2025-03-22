@@ -1,5 +1,5 @@
 app_name: "MyApp"
-port: 9090
+port: 8080
 
 db_host: "db.example.com"
 db_port: 3306
