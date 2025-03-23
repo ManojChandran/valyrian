@@ -28,7 +28,12 @@ func main() {
 	// Register Routes
 	api.RegisterRoutes(r)
 
+	// Paths to the SSL certificate and key
+	//certFile := "server.crt"
+	//keyFile := "server.key"
+
 	port := cfg.Port
 	fmt.Println("Server running on port:", port)
 	log.Fatal(http.ListenAndServe(":"+port, r))
+	//log.Fatal(http.ListenAndServeTLS(":"+port, certFile, keyFile, r))
 }

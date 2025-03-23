@@ -27,7 +27,7 @@ type DBConfig struct {
 func LoadConfig(configPath string) (*Config, error) {
 	viper.SetConfigName("config")
 	viper.SetConfigType("yaml")
-	viper.AddConfigPath("../")
+	viper.AddConfigPath("././")
 
 	viper.SetEnvPrefix("MYAPP")
 	viper.AutomaticEnv()

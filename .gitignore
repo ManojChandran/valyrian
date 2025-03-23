@@ -48,6 +48,8 @@ builds/**/images/*
 
 # security / ssl
 *.pem
+*.key
+*.crt
 *.xxjson
 
 # GO SDK
