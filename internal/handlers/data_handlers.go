@@ -1,6 +1,7 @@
 package handlers
 
 import (
+	"fmt"
 	"io/ioutil"
 	"net/http"
 
@@ -48,6 +49,6 @@ func DataDelHandler(w http.ResponseWriter, r *http.Request) {
 	w.WriteHeader(http.StatusNoContent)
 }
 
-func NotAllowedHandler(w http.ResponseWriter, r *http.Request) {
-	http.Error(w, "Method not allowed", http.StatusMethodNotAllowed)
+func IndexHandler(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintln(w, "key valu data serice is up and running!")
 }
